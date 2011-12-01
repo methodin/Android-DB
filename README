@@ -1,0 +1,41 @@
+Examples of using the DB objects (from an activity)
+
+// First let's find out if they exist
+UsersDB db = new UsersDB(this);
+db.open();
+ContentValues v = db.fetchOne(UsersDB.KEY_CODE+" = ? AND "+UsersDB.KEY_BUSINESS+" = ?", new String[]{userCode, mCode});
+
+// We need to create a new local record
+long user_id;
+if(v.size() == 0) {
+	HashMap<String,String> values = new HashMap<String,String>();
+	values.put(UsersDB.KEY_BUSINESS, mCode);
+	values.put(UsersDB.KEY_CODE, userCode);
+	values.put(UsersDB.KEY_USED, "1");
+	user_id = db.create(values);
+} else {
+	user_id = v.getAsLong(UsersDB.KEY_ROWID);
+	used = v.getAsInteger(UsersDB.KEY_USED);
+	used++;
+	v.put(UsersDB.KEY_USED, used);
+	db.update(v.getAsInteger(UsersDB.KEY_ROWID), v);
+}
+
+Cursor res = db.fetch(UsersDB.KEY_BUSINESS+" = 1");
+if(res != null) {
+	while(!res.isAfterLast()) {
+		String code = res.getString(res.getColumnIndex(UsersDB.KEY_CODE));
+		int used = res.getInt(res.getColumnIndex(UsersDB.KEY_USED));
+		
+		// Do something
+
+		res.moveToNext();
+	}
+	res.close();
+}
+
+db.truncate();
+
+db.delete(user_id);
+
+db.close();
